@@ -110,13 +110,11 @@ GaussStatus eliminacao(double** matrizEstendida, int ordemMatriz, double toleran
             // 5a) atualizar A (usando colunas reais via permutação)
             for (int colunaAtual = colunaPivo; colunaAtual < ordemMatriz; colunaAtual++) {
                 int colunaReal = permColGlobal[colunaAtual];
-                matrizEstendida[linha][colunaReal] -=
-                    multiplicador * matrizEstendida[colunaPivo][colunaReal];
+                matrizEstendida[linha][colunaReal] -= multiplicador * matrizEstendida[colunaPivo][colunaReal];
             }
 
             // 5b) atualizar b (última coluna)
-            matrizEstendida[linha][ordemMatriz] -=
-                multiplicador * matrizEstendida[colunaPivo][ordemMatriz];
+            matrizEstendida[linha][ordemMatriz] -= multiplicador * matrizEstendida[colunaPivo][ordemMatriz];
         }
     }
 
