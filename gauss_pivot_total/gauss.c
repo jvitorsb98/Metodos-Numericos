@@ -7,8 +7,6 @@
 static int* permColGlobal = NULL;
 static int   tamanhoPerm  = 0;
 
-
-
 // ----------------------------------------------
 // AUXILIAR: inicializar vetor para permutação de colunas
 // ----------------------------------------------

@@ -2,29 +2,31 @@
 #include <stdlib.h>
 #include "utils.h"
 
-
+/**
+ * Lê do arquivo a ordem da matriz e os coeficientes de A e b,
+ * preenchendo a matriz estendida [A|b].
+ */
 double** lerEntrada(const char* nomeArquivo, int* ordemMatriz) {
-
-    FILE* file =  fopen(nomeArquivo,"r");
-
-    if(!file){
-       perror("Erro ao abrir arquivo");
+    // --- Abrir arquivo ---
+    FILE* file = fopen(nomeArquivo, "r");
+    if (!file) {
+        perror("Erro ao abrir arquivo");
         exit(1);
     }
 
+    // --- Ler ordem da matriz ---
     if (fscanf(file, "%d", ordemMatriz) != 1) {
         fprintf(stderr, "Erro: não foi possível ler a ordem da matriz.\n");
         exit(1);
     }
 
+    // --- Alocar matriz estendida [A|b] ---
     double** matrizEstendida = (double**) malloc((*ordemMatriz) * sizeof(double*));
-
-    for(int i = 0 ; i < *ordemMatriz ; i++){
+    for (int i = 0; i < *ordemMatriz; i++) {
         matrizEstendida[i] = (double*) malloc(((*ordemMatriz) + 1) * sizeof(double));
-
     }
     
-    
+    // --- Preencher matriz com coeficientes de A e b ---
     for (int i = 0; i < *ordemMatriz; i++) {
         for (int j = 0; j < (*ordemMatriz) + 1; j++) {
             if (fscanf(file, "%lf", &matrizEstendida[i][j]) != 1) {
@@ -34,19 +36,26 @@ double** lerEntrada(const char* nomeArquivo, int* ordemMatriz) {
         }
     }
 
+    // --- Fechar arquivo e retornar ---
     fclose(file);
     return matrizEstendida;
 }
 
+/**
+ * Imprime a matriz estendida [A|b] no console.
+ */
 void imprimirMatriz(double** matrizEstendida, int ordemMatriz) {
     for (int i = 0; i < ordemMatriz; i++) {
-        for (int j = 0; j < ordemMatriz+1; j++) {
+        for (int j = 0; j < ordemMatriz + 1; j++) {
             printf("%8.3f ", matrizEstendida[i][j]);
         }
         printf("\n");
     }
 }
 
+/**
+ * Libera a memória ocupada pela matriz estendida [A|b].
+ */
 void liberarMatriz(double** matrizEstendida, int ordemMatriz) {
     for (int i = 0; i < ordemMatriz; i++) {
         free(matrizEstendida[i]);
@@ -54,6 +63,9 @@ void liberarMatriz(double** matrizEstendida, int ordemMatriz) {
     free(matrizEstendida);
 }
 
+/**
+ * Cria e aloca o vetor solução x.
+ */
 double* criarVetorSolucao(int ordemMatriz) {
     double* x = (double*) malloc(ordemMatriz * sizeof(double));
     if (!x) {
@@ -63,17 +75,26 @@ double* criarVetorSolucao(int ordemMatriz) {
     return x;
 }
 
+/**
+ * Libera a memória ocupada pelo vetor solução.
+ */
 void liberarVetorSolucao(double* vetorSolucao) {
     free(vetorSolucao);
 }
 
+/**
+ * Imprime o vetor solução no console.
+ */
 void imprimirSolucao(const double* vetorSolucao, int ordemMatriz) {
-    printf("\nSolução do sistema:\n");
+    printf("Solucao do sistema:\n");
     for (int i = 0; i < ordemMatriz; i++) {
         printf("x[%d] = %.6f\n", i, vetorSolucao[i]);
     }
 }
 
+/**
+ * Função utilitária que libera de uma vez a matriz estendida e o vetor solução.
+ */
 void liberar(double** matrizEstendida, int ordemMatriz, double* vetorSolucao) {
     if (vetorSolucao) {
         free(vetorSolucao);
