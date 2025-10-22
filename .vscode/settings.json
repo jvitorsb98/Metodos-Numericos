@@ -59,6 +59,11 @@
   "files.associations": {
     "cmath": "c",
     "jacobi.h": "c",
-    "limits.h": "c"
+    "limits.h": "c",
+    "utils.h": "c",
+    "uilts.h": "c",
+    "lu.h": "c",
+    "stdio.h": "c",
+    "stdlib.h": "c"
   }
 }

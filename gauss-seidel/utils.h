@@ -20,7 +20,7 @@ double** lerEntrada(const char* nomeArquivo, int* ordemMatriz);
  * @param matrizEstendida Matriz a ser impressa.
  * @param ordemMatriz Ordem da matriz quadrada A.
  */
-void imprimirMatriz(double** matrizEstendida, int ordemMatriz);
+void imprimirMatriz(const char* titulo, double** matrizEstendida, int ordemMatriz);
 
 /**
  * @brief Libera a memória alocada para a matriz estendida [A|b].

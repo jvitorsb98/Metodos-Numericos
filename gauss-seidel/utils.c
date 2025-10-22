@@ -44,7 +44,8 @@ double** lerEntrada(const char* nomeArquivo, int* ordemMatriz) {
 /**
  * Imprime a matriz estendida [A|b] no console.
  */
-void imprimirMatriz(double** matrizEstendida, int ordemMatriz) {
+void imprimirMatriz(const char* titulo, double** matrizEstendida, int ordemMatriz) {
+    puts(titulo);
     for (int i = 0; i < ordemMatriz; i++) {
         for (int j = 0; j < ordemMatriz + 1; j++) {
             printf("%8.3f ", matrizEstendida[i][j]);
