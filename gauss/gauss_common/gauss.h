@@ -11,39 +11,67 @@ typedef enum {
 } GaussStatus;
 
 /**
- * @brief Executa o método de Gauss para resolver Ax = b.
+ * @brief Realiza a etapa de eliminação de Gauss (sem pivotamento) com tolerância.
  *
- * Combina eliminação e substituição regressiva.
+ * Transforma a matriz estendida [A|b] em forma triangular superior.
+ * Caso algum pivô satisfaça |a_kk| < tolerância, retorna GAUSS_SINGULAR.
  *
- * @param matrizEstendida Matriz [A|b], que será modificada durante o processo.
+ * @param matrizEstendida Matriz [A|b], que será modificada (n x (n+1)).
  * @param ordemMatriz Ordem n da matriz quadrada A.
- * @param vetorSolucao Vetor onde será armazenada a solução x.
  * @param tolerancia Limite mínimo para considerar um pivô ≈ 0.
- * @return GAUSS_OK se o sistema foi resolvido, ou outro status em caso de falha.
+ * @return GAUSS_OK se bem-sucedido; GAUSS_SINGULAR caso pivô inválido seja encontrado.
  */
-GaussStatus gauss(double** matrizEstendida, int ordemMatriz, double* vetorSolucao, double tolerancia);
+GaussStatus eliminacao_com_tolerancia(double** matrizEstendida, int ordemMatriz, double tolerancia);
 
 /**
- * @brief Realiza a substituição regressiva em uma matriz triangular superior.
+ * @brief Realiza a etapa de eliminação de Gauss (sem pivotamento) sem checagens.
  *
- * @param matrizEstendida Matriz [A|b], já triangular superior.
- * @param ordemMatriz Ordem n da matriz quadrada A.
- * @param vetorSolucao Vetor onde será armazenada a solução x.
- * @return GAUSS_OK se bem-sucedido, GAUSS_SINGULAR se algum pivô ≈ 0.
+ * Transforma a matriz estendida [A|b] em triangular superior sem verificar pivôs,
+ * permitindo divisões por valores muito pequenos (modo diagnóstico).
+ *
+ * @param matrizEstendida Matriz [A|b], que será modificada (n x (n+1)).
+ * @param ordemMatriz Ordem n da matriz A.
+ * @return GAUSS_OK sempre (não aborta por pivô pequeno).
+ */
+GaussStatus eliminacao(double** matrizEstendida, int ordemMatriz);
+
+/**
+ * @brief Realiza a substituição regressiva (resolve Ux = c).
+ *
+ * @param matrizEstendida Matriz [A|b] em forma triangular superior.
+ * @param ordemMatriz Ordem n da matriz A.
+ * @param vetorSolucao Vetor onde será armazenada a solução x (tamanho n).
+ * @return GAUSS_OK.
  */
 GaussStatus substituicaoRegressiva(double** matrizEstendida, int ordemMatriz, double* vetorSolucao);
 
 /**
- * @brief Realiza a etapa de eliminação de Gauss (sem pivotamento).
+ * @brief Executa o método de Gauss com verificação de tolerância.
  *
- * Transforma a matriz estendida em forma triangular superior.
+ * Durante a eliminação, pivôs com valor absoluto inferior à tolerância
+ * são considerados nulos, retornando GAUSS_SINGULAR para indicar falha
+ * de estabilidade ou singularidade.
  *
- * @param matrizEstendida Matriz [A|b], que será modificada.
+ * @param matrizEstendida Matriz [A|b], modificada durante o processo.
  * @param ordemMatriz Ordem n da matriz quadrada A.
- * @param tolerancia Limite mínimo para considerar um pivô ≈ 0.
- * @return GAUSS_OK se bem-sucedido, GAUSS_SINGULAR se pivô inválido encontrado.
+ * @param vetorSolucao Vetor onde será armazenada a solução aproximada x.
+ * @param tolerancia Valor mínimo aceito para um pivô (ex.: 1e-12).
+ * @return GAUSS_OK se o sistema foi resolvido, GAUSS_SINGULAR caso pivô ≈ 0.
  */
-GaussStatus eliminacao(double** matrizEstendida, int ordemMatriz, double tolerancia);
+GaussStatus gauss_com_tolerancia(double** matrizEstendida, int ordemMatriz,
+                                 double* vetorSolucao, double tolerancia);
+
+/**
+ * @brief Resolve Ax = b via Gauss SEM guardas (eliminação sem checagens + regressiva).
+ *
+ * Útil para observar propagação de erros em casos mal-condicionados.
+ *
+ * @param matrizEstendida Matriz [A|b], modificada durante o processo.
+ * @param ordemMatriz Ordem n de A.
+ * @param vetorSolucao Vetor solução x (tamanho n).
+ * @return GAUSS_OK.
+ */
+GaussStatus gauss(double** matrizEstendida, int ordemMatriz, double* vetorSolucao);
 
 /**
  * @brief Imprime no console o status retornado pelas funções de Gauss.
