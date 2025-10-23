@@ -1,91 +1,53 @@
 # Método de Gauss com Pivotamento Total
 
-Este projeto implementa a resolução de sistemas lineares **Ax = b** usando o **método de eliminação de Gauss com pivotamento total** em linguagem C.  
+Este diretório contém a implementação do **Método de Gauss com pivotamento total** para resolução de sistemas lineares.
 
-No pivotamento total, tanto **linhas** quanto **colunas** podem ser permutadas para selecionar o maior pivô em módulo.  
-Isso aumenta a **estabilidade numérica** do método, reduzindo os erros de arredondamento.
+## Estrutura dos Arquivos
 
----
+- `main.c`: Programa principal que:
+  - Gera o sistema linear de teste (matriz de Hilbert aumentada [A|b]);
+  - Executa o método de Gauss com pivotamento total;
+  - Mede o tempo de execução;
+  - Exibe a solução e os erros relativos em relação à solução exata.
 
-## 📂 Estrutura do Projeto
+- `gauss.c` / `gauss.h`: Implementação do algoritmo de eliminação de Gauss com **pivotamento total** e substituição regressiva.
+  - Há duas versões:
+    - `gauss(...)`: sem tolerância, comparações exatas com zero.
+    - `gauss_com_tolerancia(...)`: com tolerância numérica, interrompe caso encontre pivô muito pequeno.
 
-- **gauss.c** → Implementação da eliminação, substituição e função principal de Gauss  
-- **gauss.h** → Interface
-- **utils.c** → Funções auxiliares (leitura, impressão, alocação/liberação de memória)  
-- **utils.h**  → Interface   
-- **main.c** → Ponto de entrada: usa Gauss para resolver o sistema  
-- **entrada.txt** → Arquivo de entrada com o sistema linear  
+- `utils.c` / `utils.h`: Funções auxiliares para:
+  - Criar, imprimir e liberar matrizes/vetores;
+  - Gerar sistemas de Hilbert;
+  - Calcular e exibir os erros relativos.
 
----
+## Método de Pivotamento Total
 
-## 📌 Formato do Arquivo de Entrada
+- Em cada etapa \(k\), o algoritmo escolhe como pivô o maior valor em módulo de toda a **submatriz** \(k \times k\) (não apenas da coluna).
+- Troca a linha e registra a troca de coluna via permutação lógica.
+- Esse processo é o mais robusto em termos de escolha de pivô, reduzindo bastante o risco de instabilidade numérica, embora não elimine completamente os efeitos de mau condicionamento.
 
-O arquivo deve conter:
+## Como Compilar
 
-1. **Primeira linha:** um inteiro `n` (ordem da matriz A).  
-2. **Próximas `n` linhas:** cada linha com **`n` coeficientes de A** **+** **1** coeficiente de **`b`**.  
-   - Total por linha: **`n + 1`** valores.  
-   - Valores separados por espaço.  
-   - Usar **ponto** como separador decimal (ex.: `2.5`).  
-
-### Exemplo (3×3)
-
-Arquivo `entrada.txt`:
-
-```
-3
-0  2  9   7
-1  0  2   3
-2  1  1   4
-```
-
----
-
-## ⚙️ Compilação e Execução
-
-Compilação com **gcc** (ou MinGW no Windows):
+No Windows (com MinGW, por exemplo):
 
 ```bash
-gcc main.c gauss.c utils.c -o gauss_total -lm
+gcc main.c gauss.c utils.c -o gauss_pivot_total.exe -lm
 ```
 
-Execução:
+No Linux:
 
 ```bash
-./gauss_total
+gcc main.c gauss.c utils.c -o gauss_pivot_total -lm
 ```
 
----
+## Como Executar
 
-## 📤 Saída Esperada
-
-1. O programa lê e armazena a matriz estendida `[A|b]`.  
-2. Aplica o método de Gauss com pivotamento total:  
-   - Escolha do pivô máximo em módulo na submatriz restante.  
-   - Troca de linhas .  
-   - Troca de colunas .  
-   - Eliminação até obter matriz triangular superior.  
-3. Resolve o sistema via **substituição regressiva**.  
-4. Mostra o status e a solução encontrada.  
-
-### Exemplo de saída:
-
-```
-OK
-Solução do sistema:
-x[0] = 2.000000
-x[1] = 3.000000
-x[2] = -1.000000
+```bash
+./gauss_pivot_total
 ```
 
----
-
-## 🚩 Possíveis Status
-
-- **OK** → sistema resolvido com sucesso.  
-- **Sistema singular** → pivô ≈ 0 encontrado, matriz não tem solução única.  
-- **Sistema inconsistente** → linha nula em A com b ≠ 0.  
-
----
-
-
+O programa irá:
+- Resolver o sistema de Hilbert da ordem definida em `main.c` (padrão: n=15).
+- Imprimir o vetor solução.
+- Mostrar os erros relativos de cada componente.
+- Exibir o tempo de execução.

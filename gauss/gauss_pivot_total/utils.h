@@ -2,22 +2,11 @@
 #define UTILS_H
 
 /**
- * @brief Lê um sistema linear Ax = b de um arquivo.
- *
- * O arquivo deve conter:
- *  - Primeira linha: ordem da matriz (n).
- *  - Próximas n linhas: n coeficientes de A seguidos do termo b.
- *
- * @param nomeArquivo Nome do arquivo de entrada.
- * @param ordemMatriz Ponteiro para inteiro onde será armazenada a ordem da matriz.
- * @return Matriz estendida [A|b] de tamanho n × (n+1).
- */
-double** lerEntrada(const char* nomeArquivo, int* ordemMatriz);
-
-/**
  * @brief Imprime a matriz estendida [A|b] no console.
  *
- * @param matrizEstendida Matriz a ser impressa.
+ * Cada linha contém os coeficientes da matriz A seguidos do termo independente b.
+ *
+ * @param matrizEstendida Ponteiro para a matriz estendida [A|b].
  * @param ordemMatriz Ordem da matriz quadrada A.
  */
 void imprimirMatriz(double** matrizEstendida, int ordemMatriz);
@@ -25,45 +14,68 @@ void imprimirMatriz(double** matrizEstendida, int ordemMatriz);
 /**
  * @brief Libera a memória alocada para a matriz estendida [A|b].
  *
- * @param matrizEstendida Matriz a ser liberada.
+ * @param matrizEstendida Ponteiro para a matriz a ser liberada.
  * @param ordemMatriz Ordem da matriz quadrada A.
  */
 void liberarMatriz(double** matrizEstendida, int ordemMatriz);
 
 /**
- * @brief Cria (aloca) o vetor solução x.
+ * @brief Cria e aloca o vetor solução x.
  *
  * @param ordemMatriz Dimensão do sistema (n).
- * @return Ponteiro para vetor solução alocado.
+ * @return Ponteiro para o vetor solução alocado dinamicamente.
  */
 double* criarVetorSolucao(int ordemMatriz);
 
 /**
  * @brief Libera a memória ocupada pelo vetor solução.
  *
- * @param vetorSolucao Vetor solução a ser liberado.
+ * @param vetorSolucao Ponteiro para o vetor solução a ser liberado.
  */
 void liberarVetorSolucao(double* vetorSolucao);
 
 /**
  * @brief Imprime no console o vetor solução x.
  *
- * @param vetorSolucao Vetor solução.
- * @param ordemMatriz Dimensão do sistema.
+ * Mostra cada componente do vetor em notação científica com alta precisão.
+ *
+ * @param vetorSolucao Ponteiro para o vetor solução.
+ * @param ordemMatriz Dimensão do sistema (n).
  */
 void imprimirSolucao(const double* vetorSolucao, int ordemMatriz);
 
 /**
- * @brief Libera a matriz estendida [A|b] e o vetor solução de uma vez.
+ * @brief Libera a matriz estendida [A|b] e o vetor solução em uma única chamada.
  *
- * @param matrizEstendida Matriz a ser liberada.
+ * @param matrizEstendida Ponteiro para a matriz estendida a ser liberada.
  * @param ordemMatriz Ordem da matriz quadrada A.
- * @param vetorSolucao Vetor solução a ser liberado.
+ * @param vetorSolucao Ponteiro para o vetor solução a ser liberado.
  */
 void liberar(double** matrizEstendida, int ordemMatriz, double* vetorSolucao);
 
-// Gera matriz de Hilbert aumentada [A|b] de ordem n.
-// A_ij = 1 / (i + j - 1) (índices 1-based); b_i = soma da i-ésima linha de A.
+/**
+ * @brief Gera a matriz de Hilbert aumentada [A|b] de ordem n.
+ *
+ * A matriz A é definida como:
+ *   A_ij = 1 / (i + j - 1), para i,j iniciando em 1.
+ * O vetor b é a soma dos elementos de cada linha de A.
+ *
+ * @param ordemMatriz Ordem da matriz (n).
+ * @return Ponteiro para a matriz estendida [A|b].
+ */
 double** gerarHilbertAumentada(int ordemMatriz);
+
+/**
+ * @brief Calcula e imprime os erros relativos entre a solução obtida e a solução exata (1,...,1)^T.
+ *
+ * Para cada componente x_i, calcula:
+ *   erro_i = |x_i - 1| / |1| * 100%
+ *
+ * Também imprime o erro médio e o erro máximo.
+ *
+ * @param vetorSolucao Ponteiro para o vetor solução aproximada.
+ * @param ordemMatriz Dimensão do sistema (n).
+ */
+void calcularErroRelativo(const double* vetorSolucao, int ordemMatriz);
 
 #endif

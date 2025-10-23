@@ -5,9 +5,9 @@
 
 int main(void) {
     // ============================================
-    // ETAPA 1: Ler sistema do arquivo
+    // ETAPA 1: Gerar sistema (Hilbert aumentada)
     // ============================================
-    int ordemMatriz=15;
+    int ordemMatriz = 15;
     double** matrizExtendida = gerarHilbertAumentada(ordemMatriz);
 
     // ============================================
@@ -16,13 +16,13 @@ int main(void) {
     double* vetorSolucao = criarVetorSolucao(ordemMatriz);
 
     // ============================================
-    // ETAPA 3: Medir tempo e resolver com Gauss (pivotamento total)
+    // ETAPA 3: Medir tempo e resolver com Gauss (pivotamento total, sem tolerância)
     // ============================================
     LARGE_INTEGER freq, inicio, fim;
     QueryPerformanceFrequency(&freq);   // frequência do contador
     QueryPerformanceCounter(&inicio);   // marca início
 
-    GaussStatus status = gauss(matrizExtendida, ordemMatriz, vetorSolucao, 1e-12);
+    GaussStatus status = gauss(matrizExtendida, ordemMatriz, vetorSolucao);
 
     QueryPerformanceCounter(&fim);      // marca fim
     double tempoSegundos = (double)(fim.QuadPart - inicio.QuadPart) / freq.QuadPart;
@@ -33,6 +33,7 @@ int main(void) {
     imprimirStatus(status);
     if (status == GAUSS_OK) {
         imprimirSolucao(vetorSolucao, ordemMatriz);
+        calcularErroRelativo(vetorSolucao, ordemMatriz);
     }
 
     printf("\nTempo de execução: %.10f segundos\n", tempoSegundos);
