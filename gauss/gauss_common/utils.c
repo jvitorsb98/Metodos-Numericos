@@ -3,44 +3,7 @@
 #include <math.h>
 #include "utils.h"
 
-double** lerEntrada(const char* nomeArquivo, int* ordemMatriz) {
-    // Abre arquivo de entrada
-    FILE* arquivo = fopen(nomeArquivo, "r");
-    if (!arquivo) {
-        perror("Erro ao abrir arquivo");
-        exit(1);
-    }
 
-    // Lê a ordem do sistema (n)
-    if (fscanf(arquivo, "%d", ordemMatriz) != 1) {
-        fprintf(stderr, "Erro: não foi possível ler a ordem da matriz.\n");
-        fclose(arquivo);
-        exit(1);
-    }
-
-    // Aloca matriz estendida [A|b] (n x (n+1))
-    double** matrizEstendida = (double**) malloc((*ordemMatriz) * sizeof(double*));
-    if (!matrizEstendida) { perror("malloc"); fclose(arquivo); exit(1); }
-
-    for (int linha = 0; linha < *ordemMatriz; linha++) {
-        matrizEstendida[linha] = (double*) malloc(((*ordemMatriz) + 1) * sizeof(double));
-        if (!matrizEstendida[linha]) { perror("malloc"); fclose(arquivo); exit(1); }
-    }
-    
-    // Preenche [A|b] a partir do arquivo
-    for (int linha = 0; linha < *ordemMatriz; linha++) {
-        for (int coluna = 0; coluna < (*ordemMatriz) + 1; coluna++) {
-            if (fscanf(arquivo, "%lf", &matrizEstendida[linha][coluna]) != 1) {
-                fprintf(stderr, "Erro ao ler elemento da linha %d.\n", linha);
-                fclose(arquivo);
-                exit(1);
-            }
-        }
-    }
-
-    fclose(arquivo);
-    return matrizEstendida;
-}
 
 void imprimirMatriz(double** matrizEstendida, int ordemMatriz) {
     for (int linha = 0; linha < ordemMatriz; linha++) {
