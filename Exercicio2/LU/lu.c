@@ -7,8 +7,7 @@
 /* Flag interna de aviso (pivô ~ 0) */
 static int g_flagPivoQuaseZero = 0;
 
-void luRedefinirAvisos()      { g_flagPivoQuaseZero = 0; }
-int  luFlagPivoQuaseZero()    { return g_flagPivoQuaseZero; }
+
 
 /**
  * Fatoração LU por multiplicadores (sem pivotamento).
@@ -130,4 +129,14 @@ int inversaPorLU(double** matrizA, int ordemMatriz, double tolerancia,
     liberarMatriz(matrizL, ordemMatriz);
     liberarMatriz(matrizU, ordemMatriz);
     return ok; // 0 = executou; use luFlagPivoQuaseZero() para saber se é instável
+}
+
+
+void luRedefinirAvisos(){
+     g_flagPivoQuaseZero = 0;
+}
+
+
+int  luFlagPivoQuaseZero(){ 
+    return g_flagPivoQuaseZero;
 }
