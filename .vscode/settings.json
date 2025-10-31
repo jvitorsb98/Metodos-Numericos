@@ -65,6 +65,9 @@
     "lu.h": "c",
     "stdio.h": "c",
     "stdlib.h": "c",
-    "math.h": "c"
+    "math.h": "c",
+    "gaussseidel_sor.h": "c",
+    "omp.h": "c",
+    "windows.h": "c"
   }
 }
