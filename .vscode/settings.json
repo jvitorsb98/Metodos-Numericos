@@ -55,19 +55,5 @@
   "C_Cpp_Runner.useLeakSanitizer": false,
   "C_Cpp_Runner.showCompilationTime": false,
   "C_Cpp_Runner.useLinkTimeOptimization": false,
-  "C_Cpp_Runner.msvcSecureNoWarnings": false,
-  "files.associations": {
-    "cmath": "c",
-    "jacobi.h": "c",
-    "limits.h": "c",
-    "utils.h": "c",
-    "uilts.h": "c",
-    "lu.h": "c",
-    "stdio.h": "c",
-    "stdlib.h": "c",
-    "math.h": "c",
-    "gaussseidel_sor.h": "c",
-    "omp.h": "c",
-    "windows.h": "c"
-  }
+  "C_Cpp_Runner.msvcSecureNoWarnings": false
 }

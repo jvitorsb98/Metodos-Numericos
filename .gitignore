@@ -1,0 +1,36 @@
+# ====================================
+# 🔧 Projeto: Métodos Numéricos (C)
+# ====================================
+
+# Compilação
+*.o
+*.exe
+*.out
+*.obj
+*.dll
+*.so
+*.a
+*.lib
+
+# Backup / temporários
+*~
+*.tmp
+*.bak
+*.swp
+*.log
+
+# Diretórios de build temporários (caso futuros Makefiles usem)
+build/
+bin/
+obj/
+
+# VSCode
+.vscode/
+
+# Arquivos do sistema (Windows / macOS)
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Cache do sistema
+*.cache

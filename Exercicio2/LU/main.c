@@ -1,10 +1,16 @@
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <sys/time.h>
+#endif
 #include "utils.h"
 #include "lu.h"
 
 // ============================================
-// FUNCOES AUXILIARES (nomes claros e consistentes)
+// FUNÇÕES AUXILIARES
 // ============================================
 
 static void mostrarFatoracaoLU(double** matrizA, int ordemMatriz, double tolerancia) {
@@ -17,7 +23,9 @@ static void mostrarFatoracaoLU(double** matrizA, int ordemMatriz, double toleran
     imprimirMatriz("U:", matrizU, ordemMatriz);
 
     double determinante = 1.0;
-    for (int i = 0; i < ordemMatriz; i++) determinante *= matrizU[i][i];
+    for (int i = 0; i < ordemMatriz; i++)
+        determinante *= matrizU[i][i];
+
     printf("det(A) (produto dos pivos de U) = %.6e\n\n", determinante);
 
     liberarMatriz(matrizL, ordemMatriz);
@@ -39,46 +47,61 @@ static void verificarInversa(double** matrizA, double** matrizInversa,
 }
 
 // ============================================
-// FUNCAO PRINCIPAL
+// FUNÇÃO PRINCIPAL
 // ============================================
 
 int main(void) {
-    // ============================================
-    // ESCOLHA DA MATRIZ
-    // ============================================
     int ordemMatriz = 3;
     double** matrizA = criarMatrizA1();  // altere aqui para testar outra matriz
     double** matrizInversa  = alocarMatriz(ordemMatriz);
     double** matrizErros    = alocarMatriz(ordemMatriz);
-    double tolerancia = 1e-12;  // limite para detectar pivos quase nulos (baseado na precisao do double)
+    double tolerancia = 1e-12;  // limite para detectar pivôs quase nulos (baseado na precisão do double)
 
-    // usar copia para fatorar/imprimir L e U sem alterar matrizA
     double** matrizCopia = clonarMatriz(matrizA, ordemMatriz);
 
     // ============================================
-    // INVERTER POR LU (sem abortar se pivo ~ 0)
+    // MEDIR TEMPO DE EXECUÇÃO
     // ============================================
+
+#ifdef _WIN32
+    LARGE_INTEGER freq, inicio, fim;
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&inicio);
+#else
+    struct timeval inicio, fim;
+    gettimeofday(&inicio, NULL);
+#endif
+
     (void) inversaPorLU(matrizA, ordemMatriz, tolerancia, matrizInversa);
 
+#ifdef _WIN32
+    QueryPerformanceCounter(&fim);
+    double tempo_execucao = (double)(fim.QuadPart - inicio.QuadPart) / freq.QuadPart;
+#else
+    gettimeofday(&fim, NULL);
+    double tempo_execucao = (fim.tv_sec - inicio.tv_sec) + (fim.tv_usec - inicio.tv_usec) / 1e6;
+#endif
+
+
+    // ============================================
+    // RESULTADOS E ANÁLISE
+    // ============================================
     if (luFlagPivoQuaseZero()) {
         puts("[AVISO] Pivo aproximado de zero detectado: matriz singular ou quase singular. "
              "Os resultados a seguir sao numericamente instaveis e potencialmente invalidos.");
     }
 
-    // L, U e determinante
     mostrarFatoracaoLU(matrizCopia, ordemMatriz, tolerancia);
-
-    // A^{-1} calculada (mesmo que instavel, se for o caso)
     imprimirMatriz("A^{-1} (calculada):", matrizInversa, ordemMatriz);
-
-    // Produto e erro
     verificarInversa(matrizCopia, matrizInversa, ordemMatriz, matrizErros);
 
-    // limpeza
     liberarMatriz(matrizA, ordemMatriz);
     liberarMatriz(matrizInversa, ordemMatriz);
     liberarMatriz(matrizErros, ordemMatriz);
     liberarMatriz(matrizCopia, ordemMatriz);
+
+
+    printf("\nTempo de execucao total: %.6e segundos\n\n", tempo_execucao);
 
     return 0;
 }
