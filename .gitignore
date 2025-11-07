@@ -25,6 +25,7 @@ bin/
 obj/
 
 # VSCode
+.vscode
 .vscode/
 
 # Arquivos do sistema (Windows / macOS)
