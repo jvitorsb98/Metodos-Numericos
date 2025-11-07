@@ -14,14 +14,12 @@
  * ====================================================================== */
 
 static int g_gauss_pivo_quase_zero = 0;  /**< Flag: indica presença de pivô ≈ 0. */
-static int g_gauss_trocas_linha     = 0; /**< Contador: número de trocas de linhas (pivotamento). */
 
 /**
  * @brief Reinicia as flags e contadores internos do método de Gauss.
  */
 void gauss_reset_flags(void) {
     g_gauss_pivo_quase_zero = 0;
-    g_gauss_trocas_linha    = 0;
 }
 
 /**
@@ -31,12 +29,7 @@ int gaussFlagPivoQuaseZero(void) {
     return g_gauss_pivo_quase_zero;
 }
 
-/**
- * @brief Retorna a quantidade de trocas de linha realizadas na eliminação.
- */
-int gaussContagemTrocasLinhas(void) {
-    return g_gauss_trocas_linha;
-}
+
 
 /* ======================================================================
  * ELIMINAÇÃO DE GAUSS — PIVOTAMENTO PARCIAL (COM TOLERÂNCIA)
@@ -101,8 +94,7 @@ GaussStatus eliminacao_parcial(double** matrizEstendida, int ordemMatriz, double
 
             double multiplicador = elementoColuna / pivo;
             for (int colunaAtual = indicePivo; colunaAtual <= ordemMatriz; colunaAtual++) {
-                matrizEstendida[linhaAtual][colunaAtual] -=
-                    multiplicador * matrizEstendida[indicePivo][colunaAtual];
+                matrizEstendida[linhaAtual][colunaAtual] -= multiplicador * matrizEstendida[indicePivo][colunaAtual];
             }
         }
     }
@@ -149,30 +141,35 @@ GaussStatus eliminacao_parcial(double** matrizEstendida, int ordemMatriz, double
  */
 GaussStatus substituicaoRegressiva(double** matrizEstendida, int ordemMatriz,
                                    double* vetorSolucao, double tolerancia) {
-    for (int linhaAtual = ordemMatriz - 1; linhaAtual >= 0; linhaAtual--) {
-        double somaAcima = 0.0;
-        for (int colunaAtual = linhaAtual + 1; colunaAtual < ordemMatriz; colunaAtual++) {
-            somaAcima += matrizEstendida[linhaAtual][colunaAtual] * vetorSolucao[colunaAtual];
+    const int n = ordemMatriz;
+    int marcou_inconsistencia = 0;  /* registra 0*x = b≠0, mas NÃO interrompe */
+
+    for (int linha = n - 1; linha >= 0; linha--) {
+        double soma = 0.0;
+        for (int col = linha + 1; col < n; col++) {
+            soma += matrizEstendida[linha][col] * vetorSolucao[col];
         }
 
-        double elementoDiagonal     = matrizEstendida[linhaAtual][linhaAtual];
-        double termoIndependenteEff = matrizEstendida[linhaAtual][ordemMatriz] - somaAcima;
+        double diag = matrizEstendida[linha][linha];
+        double rhs  = matrizEstendida[linha][n] - soma;
 
-        if (fabs(elementoDiagonal) >= tolerancia) {
-            vetorSolucao[linhaAtual] = termoIndependenteEff / elementoDiagonal;
+        if (fabs(diag) >= tolerancia) {
+            /* caso normal */
+            vetorSolucao[linha] = rhs / diag;
         } else {
-            /* Pivô ≈ 0 */
-            if (fabs(termoIndependenteEff) >= tolerancia) {
-                return GAUSS_INCONSISTENTE; /* 0*x = b≠0 */
-            }
-            /* Equação redundante → variável livre (definimos 0 por convenção) */
-            vetorSolucao[linhaAtual] = 0.0;
+            /* pivô ~ 0: NÃO sobrescreve x[linha]; apenas marca e segue */
+            vetorSolucao[linha] = rhs / diag;
             g_gauss_pivo_quase_zero = 1;
+
+            if (fabs(rhs) >= tolerancia) {
+                marcou_inconsistencia = 1;
+            }
         }
     }
 
-    return GAUSS_OK;
+    return marcou_inconsistencia ? GAUSS_INCONSISTENTE : GAUSS_OK;
 }
+
 
 /* ======================================================================
  * FUNÇÃO PRINCIPAL (ELIMINAÇÃO + REGRESSIVA)

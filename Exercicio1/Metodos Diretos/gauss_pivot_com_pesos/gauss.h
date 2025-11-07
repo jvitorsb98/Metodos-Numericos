@@ -1,88 +1,74 @@
+/**
+ * @file gauss.h
+ * @brief Cabeçalhos e definições comuns para o método de Gauss
+ *        (pivotamento parcial, por pesos, etc.)
+ */
+
 #ifndef GAUSS_H
 #define GAUSS_H
 
-/**
- * @brief Status de retorno das rotinas do método de Gauss.
- */
+#include <stdio.h>
+
+/* ======================================================================
+ * ENUM DE STATUS — usado em todos os módulos do Gauss
+ * ====================================================================== */
 typedef enum {
-    GAUSS_OK = 0,           /**< Execução normal. */
-    GAUSS_SINGULAR = 1,     /**< Sistema singular ou pivô ≈ 0 (sem solução única). */
-    GAUSS_INCONSISTENTE = 2 /**< Sistema inconsistente (linha nula em A com b ≠ 0). */
+    GAUSS_OK = 0,            /**< Sistema resolvido normalmente            */
+    GAUSS_SINGULAR,          /**< Sistema singular ou numericamente instável */
+    GAUSS_INCONSISTENTE      /**< Sistema inconsistente (sem solução)     */
 } GaussStatus;
 
-/**
- * @brief Eliminação de Gauss com pivotamento escalonado (com pesos) — COM tolerância.
- *
- * @details
- * Para cada coluna k:
- * - Calcula-se previamente os pesos de cada linha: s[i] = max_j |A[i,j]|;
- * - Seleciona-se como pivô a linha i ≥ k que maximiza |A[i,k]| / s[i];
- * - Troca-se as linhas k ↔ i, se necessário, mantendo consistência dos pesos;
- * - Zera-se os elementos abaixo do pivô na coluna k.
- *
- * Caso o melhor pivô encontrado seja menor que a tolerância, retorna GAUSS_SINGULAR.
- *
- * @param matrizEstendida Matriz aumentada [A|b], modificada in-place em [U|c].
- * @param ordemMatriz     Ordem n da matriz quadrada A.
- * @param tolerancia      Limite numérico para considerar pivô ≈ 0.
- * @return GAUSS_OK se sucesso, GAUSS_SINGULAR se pivô inválido.
- */
-GaussStatus eliminacao_escalonada(double** matrizEstendida, int ordemMatriz, double tolerancia);
+/* ======================================================================
+ * FUNÇÕES PÚBLICAS
+ * ====================================================================== */
 
 /**
- * @brief Eliminação de Gauss com pivotamento escalonado (com pesos) — SEM tolerância.
- *
- * @details
- * Mesma lógica da versão com tolerância, mas sem checagem de pivôs pequenos.
- * Útil para observar o efeito da instabilidade numérica sem abortar a execução.
- *
- * @param matrizEstendida Matriz aumentada [A|b], modificada in-place em [U|c].
- * @param ordemMatriz     Ordem n da matriz quadrada A.
- * @return GAUSS_OK sempre.
+ * @brief Reinicia as flags de diagnóstico globais.
  */
-GaussStatus eliminacao_escalonada_sem_tolerancia(double** matrizEstendida, int ordemMatriz);
+void gauss_reset_flags(void);
 
 /**
- * @brief Substituição regressiva em sistema triangular superior (Ux = c).
- *
- * @param matrizEstendida Matriz [U|c] já triangular superior.
- * @param ordemMatriz     Ordem n da matriz.
- * @param vetorSolucao    Vetor solução x (saída).
- * @return GAUSS_OK.
+ * @brief Retorna 1 se algum pivô ≈ 0 foi encontrado.
  */
-GaussStatus substituicaoRegressiva(double** matrizEstendida, int ordemMatriz, double* vetorSolucao);
+int gaussFlagPivoQuaseZero(void);
 
 /**
- * @brief Resolve Ax = b via Gauss com pivotamento escalonado — COM tolerância.
+ * @brief Executa a eliminação de Gauss (pivotamento parcial, total ou por pesos),
+ *        conforme implementado em cada módulo.
  *
- * @details
- * Aplica @c eliminacao_escalonada seguida de @c substituicaoRegressiva.
- *
- * @param matrizEstendida Matriz [A|b], modificada in-place para [U|c].
- * @param ordemMatriz     Ordem n da matriz quadrada A.
- * @param vetorSolucao    Vetor solução x (saída).
- * @param tolerancia      Limite numérico para considerar pivô ≈ 0.
- * @return GAUSS_OK em sucesso, GAUSS_SINGULAR em falha.
+ * @param matrizEstendida Matriz aumentada [A|b].
+ * @param ordemMatriz     Ordem da matriz A.
+ * @param tolerancia      Valor limite para considerar pivôs nulos.
+ * @return Status intermediário (OK ou INCONSISTENTE).
  */
-GaussStatus gauss_escalonado(double** matrizEstendida, int ordemMatriz, double* vetorSolucao, double tolerancia);
+GaussStatus eliminacao_parcial(double** matrizEstendida, int ordemMatriz, double tolerancia);
 
 /**
- * @brief Resolve Ax = b via Gauss com pivotamento escalonado — SEM tolerância.
+ * @brief Resolve o sistema triangular superior Ux = c.
  *
- * @details
- * Aplica @c eliminacao_escalonada_sem_tolerancia seguida de @c substituicaoRegressiva.
- *
- * @param matrizEstendida Matriz [A|b], modificada in-place para [U|c].
- * @param ordemMatriz     Ordem n da matriz quadrada A.
- * @param vetorSolucao    Vetor solução x (saída).
- * @return GAUSS_OK.
+ * @param matrizEstendida Matriz [U|c].
+ * @param ordemMatriz     Ordem da matriz.
+ * @param vetorSolucao    Vetor solução x.
+ * @param tolerancia      Tolerância numérica.
+ * @return Status intermediário (OK ou INCONSISTENTE).
  */
-GaussStatus gauss_escalonado_sem_tolerancia(double** matrizEstendida, int ordemMatriz, double* vetorSolucao);
+GaussStatus substituicaoRegressiva(double** matrizEstendida, int ordemMatriz,
+                                   double* vetorSolucao, double tolerancia);
 
 /**
- * @brief Imprime mensagem textual correspondente ao status do método de Gauss.
+ * @brief Resolve Ax = b via eliminação de Gauss completa (wrapper).
  *
- * @param status Código de retorno (GAUSS_OK, GAUSS_SINGULAR, GAUSS_INCONSISTENTE).
+ * @param matrizEstendida Matriz aumentada [A|b].
+ * @param ordemMatriz     Ordem da matriz A.
+ * @param vetorSolucao    Vetor x a preencher.
+ * @param tolerancia      Tolerância para pivôs pequenos.
+ * @return GAUSS_OK, GAUSS_SINGULAR ou GAUSS_INCONSISTENTE.
+ */
+GaussStatus gauss(double** matrizEstendida, int ordemMatriz,
+                  double* vetorSolucao, double tolerancia);
+
+/**
+ * @brief Imprime mensagem textual correspondente ao status retornado.
  */
 void imprimirStatus(GaussStatus status);
 

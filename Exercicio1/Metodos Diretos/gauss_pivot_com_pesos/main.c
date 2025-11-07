@@ -5,65 +5,62 @@
 
 /**
  * @brief Programa principal para resolução de sistemas lineares via Método de Gauss
- *        com pivotamento escalonado (com pesos).
+ *        com pivotamento escalonado (com pesos) — FAIL-SOFT.
  *
- * O sistema de teste utilizado é a matriz de Hilbert aumentada [A|b],
- * conhecida por ser fortemente mal-condicionada, servindo como caso desafiador
- * para avaliar a estabilidade numérica.
- *
- * O programa mede o tempo de execução, imprime a solução aproximada encontrada
- * e calcula os erros relativos em comparação à solução exata (1,...,1)^T.
+ * Usa a matriz de Hilbert aumentada [A|b] como caso de teste (problema mal-condicionado),
+ * mede o tempo de execução, imprime status/avisos e calcula os erros relativos
+ * contra a solução exata (1, ..., 1)^T.
  */
 int main(void) {
     // ============================================
     // ETAPA 1: Gerar sistema linear de teste
-    // Aqui é construída a matriz de Hilbert aumentada [A|b].
     // ============================================
-    int ordemMatriz = 15;  // pode ser alterado para outros valores
+    int ordemMatriz = 15;
     double** matrizEstendida = gerarHilbertAumentada(ordemMatriz);
+    double* vetorSolucao     = criarVetorSolucao(ordemMatriz);
+    const double tolerancia  = 1e-12;
 
     // ============================================
-    // ETAPA 2: Preparar vetor solução
-    // Vetor x será preenchido após a resolução.
-    // ============================================
-    double* vetorSolucao = criarVetorSolucao(ordemMatriz);
-
-    // ============================================
-    // ETAPA 3: Medir tempo de execução
-    // Uso de QueryPerformanceCounter para alta precisão.
+    // ETAPA 2: Medir tempo de execução
     // ============================================
     LARGE_INTEGER freq, inicio, fim;
     QueryPerformanceFrequency(&freq);
     QueryPerformanceCounter(&inicio);
 
-    // Escolha aqui se deseja rodar COM ou SEM tolerância:
-    GaussStatus status = gauss_escalonado_sem_tolerancia(matrizEstendida, ordemMatriz, vetorSolucao);
-    // GaussStatus status = gauss_escalonado_sem_tolerancia(matrizEstendida, ordemMatriz, vetorSolucao);
+    // Método de Gauss com pivotamento escalonado (com pesos)
+    GaussStatus status = gauss(matrizEstendida, ordemMatriz, vetorSolucao, tolerancia);
 
     QueryPerformanceCounter(&fim);
     double tempoSegundos = (double)(fim.QuadPart - inicio.QuadPart) / (double)freq.QuadPart;
     double tempoNanoSeg  = tempoSegundos * 1e9;
 
     // ============================================
-    // ETAPA 4: Exibir resultados
-    // Mostra status, solução aproximada e erros relativos.
+    // ETAPA 3: Exibir resultados
     // ============================================
     imprimirStatus(status);
-    if (status == GAUSS_OK) {
-        imprimirSolucao(vetorSolucao, ordemMatriz);
-        calcularErroRelativo(vetorSolucao, ordemMatriz);
+
+    if (status == GAUSS_SINGULAR) {
+        puts("[AVISO] Sistema singular ou numericamente instável (pivô ≈ 0). Resultados podem ser imprecisos.");
+    } else if (status == GAUSS_INCONSISTENTE) {
+        puts("[AVISO] Sistema inconsistente detectado: solução pode não existir (0...0 | b ≠ 0).");
     }
+
+    // Exibe solução e erros relativos sempre (fail-soft)
+    imprimirSolucao(vetorSolucao, ordemMatriz);
+    calcularErroRelativo(vetorSolucao, ordemMatriz);
 
     printf("\nTempo de execução: %.9f segundos (%.0f ns)\n", tempoSegundos, tempoNanoSeg);
 
     // ============================================
-    // ETAPA 5: Liberar memória alocada
+    // ETAPA 4: Liberar memória
     // ============================================
     liberar(matrizEstendida, ordemMatriz, vetorSolucao);
 
     // ============================================
-    // ETAPA 6: Encerrar com código de status
-    // Retorna 0 se execução foi bem-sucedida, 1 caso contrário.
+    // ETAPA 5: Encerrar com código de status
     // ============================================
-    return (status == GAUSS_OK) ? 0 : 1;
+    if (status == GAUSS_OK)          return 0;
+    if (status == GAUSS_SINGULAR)    return 1;
+    if (status == GAUSS_INCONSISTENTE) return 2;
+    return 0;
 }

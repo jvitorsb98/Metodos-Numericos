@@ -13,7 +13,7 @@ int main(void) {
     // ============================================
     // ETAPA 1: Gerar sistema linear de teste
     // ============================================
-    int ordemMatriz = 9;
+    int ordemMatriz = 15;
     double** matrizEstendida = gerarHilbertAumentada(ordemMatriz);
 
     // Vetor solução (x) será preenchido após a resolução
