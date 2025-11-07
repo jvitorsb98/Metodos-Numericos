@@ -1,35 +1,81 @@
-# Método de Gauss com Pivotamento Parcial com Pesos 
+# Método de Eliminação de Gauss com Pivotamento por Pesos (Scaled Partial)
 
-Implementação em C do método de Gauss com **pivotamento parcial escalonado (scaled partial pivoting)**.
+## 📘 Descrição Geral
+Este programa implementa o **método da Eliminação de Gauss com Pivotamento Escalonado (por Pesos)**, uma variação mais estável do pivotamento parcial.  
+O objetivo é resolver sistemas lineares `Ax = b` com melhor controle numérico, especialmente em matrizes mal-condicionadas como as de **Hilbert**.
 
-## 📂 Estrutura
-- `gauss.c` — eliminação (com pesos) + substituição regressiva + wrapper `gauss`
-- `gauss.h`
-- `utils.c`, `utils.h`
-- `main.c`
-- `entrada.txt`
+A abordagem realiza:
+- Seleção escalonada do pivô com base em pesos de escala;
+- Troca de linhas ponderada para reduzir erros de arredondamento;
+- Substituição regressiva robusta com detecção de instabilidade numérica.
 
-## 📌 Formato do arquivo de entrada
+---
+
+## 🧮 Etapas do Método
+
+### 1. **Eliminação com Pivotamento por Pesos**
+Cada linha recebe um **peso de escala** `s[i] = max_j |A[i,j]|`.  
+A escolha do pivô é feita pela razão:
 ```
-3
-0   2   9    7
-10  0  0.5   1
-0.1 1   2    3
+|A[i,k]| / s[i]
+```
+A linha que maximiza essa razão é usada como pivô, garantindo maior estabilidade.
+
+**Passos principais:**
+1. Calcular os pesos de cada linha;  
+2. Escolher o pivô escalonado;  
+3. Trocar linhas e pesos, se necessário;  
+4. Eliminar os elementos abaixo do pivô.
+
+---
+
+### 2. **Substituição Regressiva (Ux = c)**
+Após a triangularização, resolve-se o sistema superior `Ux = c`.  
+A regressiva utiliza uma **tolerância** para detectar pivôs muito pequenos e ajustar o cálculo da solução, evitando divisões instáveis.
+
+---
+
+### 3. **Status do Resultado**
+O algoritmo retorna um dos seguintes status:
+
+| Status | Significado |
+|---------|--------------|
+| `GAUSS_OK` | Sistema resolvido normalmente |
+| `GAUSS_SINGULAR` | Pivôs muito pequenos detectados (instabilidade numérica) |
+| `GAUSS_INCONSISTENTE` | Linha nula com termo independente diferente de zero |
+
+Essas condições não interrompem o cálculo — são apenas **diagnósticos** informados ao final.
+
+---
+
+## 🧩 Estrutura dos Arquivos
+```
+📂 gauss_pivot_com_pesos/
+│
+├── gauss.c         # Implementação do método (eliminação, regressiva, diagnóstico)
+├── gauss.h         # Definições de tipos, constantes e funções públicas
+├── utils.c/h       # Funções auxiliares (matriz de Hilbert, erro relativo, impressão)
+├── main.c          # Programa principal e medição de desempenho
+└── Makefile        # Compilação e execução automatizadas
 ```
 
-## ⚙️ Compilação e execução
+---
+
+## 🚀 Execução
+
+### Compilação
 ```bash
-gcc main.c gauss.c utils.c -o gauss_pivot_parcial_pesos -lm
-./gauss_pivot_parcial_pesos
+make
 ```
 
-## 🧠 Como funciona
-- Calcula peso de cada linha: `s[i] = max_j |A[i,j]|`.
-- Escolhe pivô maximizando `|A[i,k]| / s[i]`.
-- Troca linhas mantendo pesos sincronizados.
-- Eliminação e substituição regressiva.
+### Execução
+```bash
+make run
+```
 
-## 🚩 Status possíveis
-- `OK`
-- `Sistema singular/indeterminado (pivô ~ 0).`
-- `Sistema inconsistente (linha zero em A com b != 0).`
+### Limpeza
+```bash
+make clean
+```
+
+---

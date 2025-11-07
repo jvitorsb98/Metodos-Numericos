@@ -60,6 +60,3 @@ ou
 | **GAUSS_OK** | Execução normal (sem contradições) |
 | **GAUSS_SINGULAR** | Sistema numericamente instável (houve pivôs ≈ 0) |
 | **GAUSS_INCONSISTENTE** | Sistema inconsistente (linha nula com b≠0) |
-
-## Autor
-Implementação e documentação: **João Ramos**
