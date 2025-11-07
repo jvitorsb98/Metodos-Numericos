@@ -1,53 +1,67 @@
-# Método de Gauss com Pivotamento Total
+# 🧮 Eliminação de Gauss — Pivotamento Total (com Tolerância)
 
-Este diretório contém a implementação do **Método de Gauss com pivotamento total** para resolução de sistemas lineares.
+Este módulo implementa o **método da Eliminação de Gauss com pivotamento total**, incluindo suporte a **tolerância numérica** e **aviso de singularidade**.  
+A matriz de Hilbert é usada como sistema de teste, permitindo avaliar o comportamento em casos mal-condicionados.
 
-## Estrutura dos Arquivos
+---
 
-- `main.c`: Programa principal que:
-  - Gera o sistema linear de teste (matriz de Hilbert aumentada [A|b]);
-  - Executa o método de Gauss com pivotamento total;
-  - Mede o tempo de execução;
-  - Exibe a solução e os erros relativos em relação à solução exata.
+## 📂 Estrutura dos arquivos
 
-- `gauss.c` / `gauss.h`: Implementação do algoritmo de eliminação de Gauss com **pivotamento total** e substituição regressiva.
-  - Há duas versões:
-    - `gauss(...)`: sem tolerância, comparações exatas com zero.
-    - `gauss_com_tolerancia(...)`: com tolerância numérica, interrompe caso encontre pivô muito pequeno.
-
-- `utils.c` / `utils.h`: Funções auxiliares para:
-  - Criar, imprimir e liberar matrizes/vetores;
-  - Gerar sistemas de Hilbert;
-  - Calcular e exibir os erros relativos.
-
-## Método de Pivotamento Total
-
-- Em cada etapa \(k\), o algoritmo escolhe como pivô o maior valor em módulo de toda a **submatriz** \(k \times k\) (não apenas da coluna).
-- Troca a linha e registra a troca de coluna via permutação lógica.
-- Esse processo é o mais robusto em termos de escolha de pivô, reduzindo bastante o risco de instabilidade numérica, embora não elimine completamente os efeitos de mau condicionamento.
-
-## Como Compilar
-
-No Windows (com MinGW, por exemplo):
-
-```bash
-gcc main.c gauss.c utils.c -o gauss_pivot_total.exe -lm
+```
+├── gauss.c
+├── gauss.h
+├── utils.c
+├── utils.h
+├── main.c
+├── Makefile
 ```
 
-No Linux:
+---
+
+## ⚙️ Descrição geral
+
+O **pivotamento total** procura o maior elemento em valor absoluto **em toda a submatriz restante**, trocando tanto linhas quanto colunas logicamente.  
+A implementação considera uma **tolerância** para lidar com pivôs muito pequenos, evitando divisões numéricas instáveis.
+
+Durante a execução:
+- **Pivôs próximos de zero** acionam a flag `gaussFlagPivoQuaseZero()`;
+- **Sistemas singulares** e **inconsistentes** são detectados, mas o programa **não é interrompido**;
+- A decisão final (OK / SINGULAR / INCONSISTENTE) é feita no retorno de `gauss()`.
+
+---
+
+## 🧠 Funções principais
+
+| Função | Descrição |
+|--------|------------|
+| `eliminacao_total()` | Executa a fase de eliminação com pivotamento total e tolerância. |
+| `substituicaoRegressiva_total()` | Resolve o sistema triangular superior resultante. |
+| `gauss()` | Wrapper completo: executa as duas fases e retorna o status final. |
+| `imprimirStatus()` | Exibe uma mensagem textual sobre o status do sistema. |
+
+---
+
+## 🔍 Status de retorno
+
+| Código | Significado |
+|--------|-------------|
+| `GAUSS_OK` | Sistema resolvido com sucesso. |
+| `GAUSS_SINGULAR` | Sistema singular ou numericamente instável (pivô ~ 0). |
+| `GAUSS_INCONSISTENTE` | Sistema inconsistente (linha nula com b ≠ 0). |
+
+---
+
+## ⚡ Execução
+
+Compile com:
 
 ```bash
-gcc main.c gauss.c utils.c -o gauss_pivot_total -lm
+make
 ```
 
-## Como Executar
+Execute com:
 
 ```bash
-./gauss_pivot_total
+make run
 ```
 
-O programa irá:
-- Resolver o sistema de Hilbert da ordem definida em `main.c` (padrão: n=15).
-- Imprimir o vetor solução.
-- Mostrar os erros relativos de cada componente.
-- Exibir o tempo de execução.

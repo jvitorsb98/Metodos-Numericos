@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -8,6 +9,26 @@
    ============================================================ */
 static int* permColGlobal = NULL;
 static int   tamanhoPerm  = 0;
+
+/* ======================================================================
+ * FLAGS GLOBAIS DE DIAGNÓSTICO
+ * ====================================================================== */
+
+static int g_gauss_pivo_quase_zero = 0; /**< Flag global: indica presença de pivô ≈ 0. */
+
+/**
+ * @brief Reinicia as flags internas do método de Gauss.
+ */
+void gauss_reset_flags(void) {
+    g_gauss_pivo_quase_zero = 0;
+}
+
+/**
+ * @brief Retorna 1 se algum pivô ≈ 0 foi encontrado durante a execução.
+ */
+int gaussFlagPivoQuaseZero(void) {
+    return g_gauss_pivo_quase_zero;
+}
 
 /* ============================================================
    AUXILIARES (escopo interno)
@@ -95,59 +116,7 @@ static void trocarLinhaEColuna(double** matrizEstendida,
 }
 
 /* ============================================================
-   ELIMINAÇÃO — SEM TOLERÂNCIA
-   ============================================================ */
-
-/**
- * @brief Executa a fase de eliminação com pivotamento total (sem tolerância).
- *
- * @param matrizEstendida Matriz [A|b] de entrada, modificada para [U|c].
- * @param ordemMatriz     Ordem da matriz.
- * @return GAUSS_OK ou GAUSS_SINGULAR.
- */
-GaussStatus eliminacao(double** matrizEstendida, int ordemMatriz) {
-    if (!inicializarPermutacaoColunas(ordemMatriz)) {
-        return GAUSS_SINGULAR; /* sem enum específico para memória */
-    }
-
-    for (int colunaPivo = 0; colunaPivo < ordemMatriz - 1; colunaPivo++) {
-        int linhaPivo, colunaPivoAtual;
-        double maxAbs;
-
-        encontrarPivoTotal(matrizEstendida, ordemMatriz, colunaPivo,
-                           &linhaPivo, &colunaPivoAtual, &maxAbs);
-
-        if (maxAbs == 0.0) { /* submatriz é zero → singular */
-            liberarPermutacao();
-            return GAUSS_SINGULAR;
-        }
-
-        trocarLinhaEColuna(matrizEstendida, colunaPivo, linhaPivo, colunaPivoAtual);
-
-        int colunaRealPivo = permColGlobal[colunaPivo];
-        double pivo = matrizEstendida[colunaPivo][colunaRealPivo];
-        if (pivo == 0.0) { /* pivô exato zero */
-            liberarPermutacao();
-            return GAUSS_SINGULAR;
-        }
-
-        for (int linha = colunaPivo + 1; linha < ordemMatriz; linha++) {
-            double multiplicador = matrizEstendida[linha][colunaRealPivo] / pivo;
-
-            for (int colunaAtual = colunaPivo; colunaAtual < ordemMatriz; colunaAtual++) {
-                int colunaReal = permColGlobal[colunaAtual];
-                matrizEstendida[linha][colunaReal] -= multiplicador * matrizEstendida[colunaPivo][colunaReal];
-            }
-            matrizEstendida[linha][ordemMatriz] -= multiplicador * matrizEstendida[colunaPivo][ordemMatriz];
-        }
-    }
-
-    /* Último pivô será resolvido na regressiva. */
-    return GAUSS_OK;
-}
-
-/* ============================================================
-   ELIMINAÇÃO — COM TOLERÂNCIA
+   ELIMINAÇÃO — TOTAL (COM TOLERÂNCIA)  [NOMES PADRÃO]
    ============================================================ */
 
 /**
@@ -158,7 +127,7 @@ GaussStatus eliminacao(double** matrizEstendida, int ordemMatriz) {
  * @param tolerancia      Valor usado para checar pivôs muito pequenos.
  * @return GAUSS_OK ou GAUSS_SINGULAR.
  */
-GaussStatus eliminacao_com_tolerancia(double** matrizEstendida, int ordemMatriz, double tolerancia) {
+GaussStatus eliminacao_total(double** matrizEstendida, int ordemMatriz, double tolerancia) {
     if (!inicializarPermutacaoColunas(ordemMatriz)) {
         return GAUSS_SINGULAR;
     }
@@ -171,8 +140,7 @@ GaussStatus eliminacao_com_tolerancia(double** matrizEstendida, int ordemMatriz,
                            &linhaPivo, &colunaPivoAtual, &maxAbs);
 
         if (fabs(maxAbs) < tolerancia) {
-            liberarPermutacao();
-            return GAUSS_SINGULAR;
+            g_gauss_pivo_quase_zero = 1;
         }
 
         trocarLinhaEColuna(matrizEstendida, colunaPivo, linhaPivo, colunaPivoAtual);
@@ -180,8 +148,7 @@ GaussStatus eliminacao_com_tolerancia(double** matrizEstendida, int ordemMatriz,
         int colunaRealPivo = permColGlobal[colunaPivo];
         double pivo = matrizEstendida[colunaPivo][colunaRealPivo];
         if (fabs(pivo) < tolerancia) {
-            liberarPermutacao();
-            return GAUSS_SINGULAR;
+            g_gauss_pivo_quase_zero = 1;
         }
 
         for (int linha = colunaPivo + 1; linha < ordemMatriz; linha++) {
@@ -199,61 +166,7 @@ GaussStatus eliminacao_com_tolerancia(double** matrizEstendida, int ordemMatriz,
 }
 
 /* ============================================================
-   SUBSTITUIÇÃO REGRESSIVA — SEM TOLERÂNCIA
-   ============================================================ */
-
-/**
- * @brief Executa a substituição regressiva após a eliminação (sem tolerância).
- *
- * @param matrizEstendida Matriz [U|c] após a eliminação.
- * @param ordemMatriz     Ordem da matriz.
- * @param vetorSolucao    Vetor solução (saída).
- * @return GAUSS_OK, GAUSS_SINGULAR ou GAUSS_INCONSISTENTE.
- */
-GaussStatus substituicaoRegressiva(double** matrizEstendida, int ordemMatriz, double* vetorSolucao) {
-    if (!permColGlobal || tamanhoPerm != ordemMatriz) {
-        return GAUSS_SINGULAR;
-    }
-
-    double* xPerm = (double*) malloc(ordemMatriz * sizeof(double));
-    if (!xPerm) {
-        liberarPermutacao();
-        return GAUSS_SINGULAR;
-    }
-
-    for (int linha = ordemMatriz - 1; linha >= 0; linha--) {
-        double soma = 0.0;
-
-        for (int colunaAtual = linha + 1; colunaAtual < ordemMatriz; colunaAtual++) {
-            int colunaReal = permColGlobal[colunaAtual];
-            soma += matrizEstendida[linha][colunaReal] * xPerm[colunaAtual];
-        }
-
-        int colunaDiag = permColGlobal[linha];
-        double diag = matrizEstendida[linha][colunaDiag];
-        double rhs  = matrizEstendida[linha][ordemMatriz] - soma;
-
-        if (diag == 0.0) {
-            free(xPerm);
-            if (rhs == 0.0) { liberarPermutacao(); return GAUSS_SINGULAR; }       /* indeterminado */
-            else            { liberarPermutacao(); return GAUSS_INCONSISTENTE; } /* sem solução   */
-        }
-
-        xPerm[linha] = rhs / diag;
-    }
-
-    for (int colunaAtual = 0; colunaAtual < ordemMatriz; colunaAtual++) {
-        int colunaOriginal = permColGlobal[colunaAtual];
-        vetorSolucao[colunaOriginal] = xPerm[colunaAtual];
-    }
-
-    free(xPerm);
-    liberarPermutacao();
-    return GAUSS_OK;
-}
-
-/* ============================================================
-   SUBSTITUIÇÃO REGRESSIVA — COM TOLERÂNCIA
+   SUBSTITUIÇÃO REGRESSIVA — TOTAL (COM TOLERÂNCIA)  [NOMES PADRÃO]
    ============================================================ */
 
 /**
@@ -265,7 +178,7 @@ GaussStatus substituicaoRegressiva(double** matrizEstendida, int ordemMatriz, do
  * @param tolerancia      Valor usado para checar pivôs muito pequenos.
  * @return GAUSS_OK, GAUSS_SINGULAR ou GAUSS_INCONSISTENTE.
  */
-GaussStatus substituicaoRegressiva_com_tolerancia(double** matrizEstendida, int ordemMatriz, double* vetorSolucao, double tolerancia) {
+GaussStatus substituicaoRegressiva_total(double** matrizEstendida, int ordemMatriz, double* vetorSolucao, double tolerancia) {
     if (!permColGlobal || tamanhoPerm != ordemMatriz) {
         return GAUSS_SINGULAR;
     }
@@ -289,9 +202,8 @@ GaussStatus substituicaoRegressiva_com_tolerancia(double** matrizEstendida, int 
         double rhs  = matrizEstendida[linha][ordemMatriz] - soma;
 
         if (fabs(diag) < tolerancia) {
-            free(xPerm);
-            if (fabs(rhs) < tolerancia) { liberarPermutacao(); return GAUSS_SINGULAR; }
-            else                        { liberarPermutacao(); return GAUSS_INCONSISTENTE; }
+            g_gauss_pivo_quase_zero = 1;
+
         }
 
         xPerm[linha] = rhs / diag;
@@ -308,22 +220,8 @@ GaussStatus substituicaoRegressiva_com_tolerancia(double** matrizEstendida, int 
 }
 
 /* ============================================================
-   WRAPPERS: GAUSS COMPLETO (TOTAL)
+   WRAPPER PADRÃO: gauss(...) com tolerância (TOTAL)
    ============================================================ */
-
-/**
- * @brief Resolve Ax = b pelo método de Gauss com pivotamento total (sem tolerância).
- *
- * @param matrizEstendida Matriz [A|b] (n × (n+1)).
- * @param ordemMatriz     Ordem da matriz A.
- * @param vetorSolucao    Vetor solução (saída), tamanho n.
- * @return GAUSS_OK, GAUSS_SINGULAR ou GAUSS_INCONSISTENTE.
- */
-GaussStatus gauss(double** matrizEstendida, int ordemMatriz, double* vetorSolucao) {
-    GaussStatus status = eliminacao(matrizEstendida, ordemMatriz);
-    if (status != GAUSS_OK) return status;
-    return substituicaoRegressiva(matrizEstendida, ordemMatriz, vetorSolucao);
-}
 
 /**
  * @brief Resolve Ax = b pelo método de Gauss com pivotamento total (com tolerância).
@@ -334,10 +232,10 @@ GaussStatus gauss(double** matrizEstendida, int ordemMatriz, double* vetorSoluca
  * @param tolerancia      Valor usado para checar pivôs muito pequenos.
  * @return GAUSS_OK, GAUSS_SINGULAR ou GAUSS_INCONSISTENTE.
  */
-GaussStatus gauss_com_tolerancia(double** matrizEstendida, int ordemMatriz, double* vetorSolucao, double tolerancia) {
-    GaussStatus status = eliminacao_com_tolerancia(matrizEstendida, ordemMatriz, tolerancia);
+GaussStatus gauss(double** matrizEstendida, int ordemMatriz, double* vetorSolucao, double tolerancia) {
+    GaussStatus status = eliminacao_total(matrizEstendida, ordemMatriz, tolerancia);
     if (status != GAUSS_OK) return status;
-    return substituicaoRegressiva_com_tolerancia(matrizEstendida, ordemMatriz, vetorSolucao, tolerancia);
+    return substituicaoRegressiva_total(matrizEstendida, ordemMatriz, vetorSolucao, tolerancia);
 }
 
 /* ============================================================

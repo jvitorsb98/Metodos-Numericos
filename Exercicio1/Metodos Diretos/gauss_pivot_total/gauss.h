@@ -1,93 +1,76 @@
 #ifndef GAUSS_H
 #define GAUSS_H
 
-/**
- * @brief Códigos de retorno das rotinas de Gauss.
- */
+/* ============================================================
+   ENUM DE STATUS DE RETORNO
+   ============================================================ */
 typedef enum {
-    GAUSS_OK = 0,          /**< Execução normal */
-    GAUSS_SINGULAR = 1,    /**< Pivô ~ 0 → sistema singular/indeterminado */
-    GAUSS_INCONSISTENTE = 2/**< Linha ~0 em A e b != 0 → sistema sem solução */
+    GAUSS_OK = 0,
+    GAUSS_SINGULAR,
+    GAUSS_INCONSISTENTE
 } GaussStatus;
 
 /* ============================================================
-   FASE 1: ELIMINAÇÃO COM PIVOTAMENTO TOTAL
+   FLAGS GLOBAIS (DIAGNÓSTICO)
    ============================================================ */
 
 /**
- * @brief Executa a fase de eliminação com pivotamento total (sem tolerância).
- *
- * @param matrizEstendida Matriz [A|b] de entrada, modificada para [U|c].
- * @param ordemMatriz     Ordem da matriz.
- * @return GAUSS_OK ou GAUSS_SINGULAR.
+ * @brief Reinicia flags internas (ex.: pivô ~ 0).
  */
-GaussStatus eliminacao(double** matrizEstendida, int ordemMatriz);
+void gauss_reset_flags(void);
 
 /**
- * @brief Executa a fase de eliminação com pivotamento total (com tolerância).
- *
- * @param matrizEstendida Matriz [A|b] de entrada, modificada para [U|c].
- * @param ordemMatriz     Ordem da matriz.
- * @param tolerancia      Valor usado para checar pivôs muito pequenos.
- * @return GAUSS_OK ou GAUSS_SINGULAR.
+ * @brief Retorna 1 se algum pivô ≈ 0 foi encontrado durante a execução.
  */
-GaussStatus eliminacao_com_tolerancia(double** matrizEstendida, int ordemMatriz, double tolerancia);
+int gaussFlagPivoQuaseZero(void);
 
 /* ============================================================
-   FASE 2: SUBSTITUIÇÃO REGRESSIVA
+   ETAPAS DO MÉTODO DE GAUSS (TOTAL, COM TOLERÂNCIA)
    ============================================================ */
 
 /**
- * @brief Executa a substituição regressiva após a eliminação (sem tolerância).
- *
- * @param matrizEstendida Matriz [U|c] após a eliminação.
- * @param ordemMatriz     Ordem da matriz.
- * @param vetorSolucao    Vetor solução (saída).
- * @return GAUSS_OK, GAUSS_SINGULAR ou GAUSS_INCONSISTENTE.
- */
-GaussStatus substituicaoRegressiva(double** matrizEstendida, int ordemMatriz, double* vetorSolucao);
-
-/**
- * @brief Executa a substituição regressiva após a eliminação (com tolerância).
- *
- * @param matrizEstendida Matriz [U|c] após a eliminação.
- * @param ordemMatriz     Ordem da matriz.
- * @param vetorSolucao    Vetor solução (saída).
- * @param tolerancia      Valor usado para checar pivôs muito pequenos.
- * @return GAUSS_OK, GAUSS_SINGULAR ou GAUSS_INCONSISTENTE.
- */
-GaussStatus substituicaoRegressiva_com_tolerancia(double** matrizEstendida, int ordemMatriz, double* vetorSolucao, double tolerancia);
-
-/* ============================================================
-   WRAPPERS: GAUSS COMPLETO (TOTAL)
-   ============================================================ */
-
-/**
- * @brief Resolve Ax = b pelo método de Gauss com pivotamento total (sem tolerância).
+ * @brief Executa a fase de eliminação com pivotamento total.
  *
  * @param matrizEstendida Matriz [A|b] (n × (n+1)).
- * @param ordemMatriz     Ordem da matriz A.
- * @param vetorSolucao    Vetor solução (saída), tamanho n.
+ * @param ordemMatriz     Ordem da matriz.
+ * @param tolerancia      Valor mínimo considerado como zero.
+ * @return GAUSS_OK ou GAUSS_SINGULAR.
+ */
+GaussStatus eliminacao_total(double** matrizEstendida, int ordemMatriz, double tolerancia);
+
+/**
+ * @brief Executa a fase de substituição regressiva após a eliminação.
+ *
+ * @param matrizEstendida Matriz [U|c] (n × (n+1)).
+ * @param ordemMatriz     Ordem da matriz.
+ * @param vetorSolucao    Vetor solução (saída).
+ * @param tolerancia      Valor mínimo considerado como zero.
  * @return GAUSS_OK, GAUSS_SINGULAR ou GAUSS_INCONSISTENTE.
  */
-GaussStatus gauss(double** matrizEstendida, int ordemMatriz, double* vetorSolucao);
+GaussStatus substituicaoRegressiva_total(double** matrizEstendida, int ordemMatriz,
+                                         double* vetorSolucao, double tolerancia);
 
 /**
  * @brief Resolve Ax = b pelo método de Gauss com pivotamento total (com tolerância).
  *
  * @param matrizEstendida Matriz [A|b] (n × (n+1)).
- * @param ordemMatriz     Ordem da matriz A.
- * @param vetorSolucao    Vetor solução (saída), tamanho n.
- * @param tolerancia      Valor usado para checar pivôs muito pequenos.
+ * @param ordemMatriz     Ordem da matriz.
+ * @param vetorSolucao    Vetor solução (saída).
+ * @param tolerancia      Valor mínimo considerado como zero.
  * @return GAUSS_OK, GAUSS_SINGULAR ou GAUSS_INCONSISTENTE.
  */
-GaussStatus gauss_com_tolerancia(double** matrizEstendida, int ordemMatriz, double* vetorSolucao, double tolerancia);
+GaussStatus gauss(double** matrizEstendida, int ordemMatriz,
+                  double* vetorSolucao, double tolerancia);
+
+/* ============================================================
+   UTILITÁRIO
+   ============================================================ */
 
 /**
- * @brief Imprime em texto o status retornado pelas rotinas.
+ * @brief Imprime mensagem textual correspondente ao status retornado.
  *
  * @param status Código de retorno.
  */
 void imprimirStatus(GaussStatus status);
 
-#endif
+#endif /* GAUSS_H */
