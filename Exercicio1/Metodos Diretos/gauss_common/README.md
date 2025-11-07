@@ -48,23 +48,5 @@ ou
 ./gauss
 ```
 
-## Exemplo de Saída
 
-```
-OK
-Solucao do sistema:
-x[0] = 9.9999999999998690e-001
-x[1] = 1.0000000000001554e+000
-...
-
-Erros relativos (em %):
-A[0] = 1.310063e-012 %
-A[1] = 1.554312e-011 %
-...
-
-Erro relativo médio = 2.186473e-011 %
-Erro relativo máximo = 4.292122e-011 %
-
-Tempo de execução: 0.000000500 segundos (500 ns)
-```
 

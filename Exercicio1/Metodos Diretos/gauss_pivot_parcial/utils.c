@@ -4,6 +4,7 @@
 #include "utils.h"
 
 
+
 void imprimirMatriz(double** matrizEstendida, int ordemMatriz) {
     for (int linha = 0; linha < ordemMatriz; linha++) {
         for (int coluna = 0; coluna < ordemMatriz + 1; coluna++) {
@@ -98,6 +99,6 @@ void calcularErroRelativo(const double* vetorSolucao, int ordemMatriz) {
     }
 
     double erroPercentualMedio = (ordemMatriz > 0) ? (somaErrosPercentual / ordemMatriz) : 0.0;
-    printf("\nErro relativo médio = %.6e %%\n", erroPercentualMedio);
-    printf("Erro relativo máximo = %.6e %%\n", erroPercentualMaximo);
+    printf("\nErro relativo médio = %.10e %%\n", erroPercentualMedio);
+    printf("Erro relativo máximo = %.10e %%\n", erroPercentualMaximo);
 }
