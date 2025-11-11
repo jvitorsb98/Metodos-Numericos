@@ -125,7 +125,7 @@ GaussStatus substituicaoRegressiva(double** matrizEstendida, int ordemMatriz,
 
             g_gauss_pivo_quase_zero = 1;
             flag_singular = 1;
-            vetorSolucao[linha] = 0.0;
+            vetorSolucao[linha] = termoIndepAjustado / diag;
             continue;
         }
 

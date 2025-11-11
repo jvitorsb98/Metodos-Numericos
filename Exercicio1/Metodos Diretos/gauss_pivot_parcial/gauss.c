@@ -157,7 +157,6 @@ GaussStatus substituicaoRegressiva(double** matrizEstendida, int ordemMatriz,
             /* caso normal */
             vetorSolucao[linha] = rhs / diag;
         } else {
-            /* pivô ~ 0: NÃO sobrescreve x[linha]; apenas marca e segue */
             vetorSolucao[linha] = rhs / diag;
             g_gauss_pivo_quase_zero = 1;
 

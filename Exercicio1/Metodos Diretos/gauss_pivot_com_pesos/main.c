@@ -15,7 +15,7 @@ int main(void) {
     // ============================================
     // ETAPA 1: Gerar sistema linear de teste
     // ============================================
-    int ordemMatriz = 15;
+    int ordemMatriz = 5;
     double** matrizEstendida = gerarHilbertAumentada(ordemMatriz);
     double* vetorSolucao     = criarVetorSolucao(ordemMatriz);
     const double tolerancia  = 1e-12;
