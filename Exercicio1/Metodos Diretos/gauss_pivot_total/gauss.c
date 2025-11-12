@@ -203,7 +203,6 @@ GaussStatus substituicaoRegressiva_total(double** matrizEstendida, int ordemMatr
 
         if (fabs(diag) < tolerancia) {
             g_gauss_pivo_quase_zero = 1;
-
         }
 
         xPerm[linha] = rhs / diag;
